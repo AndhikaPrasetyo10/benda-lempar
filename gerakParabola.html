@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        table {
+            width: 70%;
+            border-collapse: collapse
+        }
+        table, th, td {
+            border: 1px solid black
+        }
+        th, td {
+            padding: 0.2rem;
+            text-align: center
+        }
+    </style>
+</head>
+<body><br><br>
+    <label>X (m):</label>
+    <input type="number" id="xAwal" value="0"><br><br>
+    <label>Y (m):</label>
+    <input type="number" id="yAwal" value="0"><br><br>
+    <label>Sudut Elevasi :</label>
+    <input type="number" id="sudut" value="20"><br><br>
+    <label>Kecepatan (m/s):</label>
+    <input type="number" id="kecepatan" value="40"><br><br>
+    <button onclick="lajuBendaLempar()">Hitung</button> <br><br>
+    <canvas id="grafik" width="1450" height="300" style = "border: 1px solid black" ></canvas>
+    <table id="table">
+        <tr></tr>
+    </table>
+
+
+</body>
+<script>
+    let gravitasi = 9.8
+    let phi = 3.14
+
+    function lajuBendaLempar(){
+        let v0 = parseFloat(document.getElementById("kecepatan").value)
+        let sudut = parseFloat(document.getElementById("sudut").value)
+        let x0 = parseFloat(document.getElementById("xAwal").value)
+        let y0 = parseFloat(document.getElementById("yAwal").value)
+
+        let V0x = v0 * Math.cos(sudut * phi/180)
+        let V0y = v0 * Math.sin(sudut * phi/180)
+        let titik = []
+
+        for(let waktu = 0,X = x0,Y = y0; Y >= 0;){
+            if(Y < 0){
+                break
+            }
+            X = x0 + V0x * waktu
+            Y = y0 + V0y * waktu - 1/2 * gravitasi * waktu**2
+
+            let Vy = V0y - gravitasi * waktu
+            let V = Math.sqrt(V0x**2 + Vy**2)
+            let kemiringan = Math.atan(Vy/V0x) * 180/phi
+
+            titik.push({
+                waktu : waktu,
+                X : X,
+                Y : Y,
+                kecepatan : V,
+                kemiringan : kemiringan,
+            })
+            waktu += 0.1
+
+        }
+        printTable(titik)
+        printGraf(titik)
+    }
+
+    function printTable(titik) {
+        const table = document.getElementById('table')
+        table.innerHTML = `
+            <tr>
+                <th>Waktu</th>
+                <th>X</th>
+                <th>Y</th>
+                <th>Kecepatan</th>
+                <th>Kemiringan</th>
+            </tr>
+        `
+        titik.forEach(data => {
+            const row = document.createElement('tr')
+            if (data.Y >= 0){
+                row.innerHTML = `
+                    <td>${data.waktu.toFixed(1)}s</td>
+                    <td>${data.X.toFixed(2)} m</td>
+                    <td>${data.Y.toFixed(2)} m</td>
+                    <td>${data.kecepatan.toFixed(2)} (m/s)</td>
+                    <td>${data.kemiringan.toFixed(2)}°</td>
+                `
+                table.appendChild(row)
+            }
+        })
+    }
+    function printGraf(titik) {
+        let grafik = document.getElementById("grafik")
+        let ctx = grafik.getContext("2d")
+        ctx.clearRect(0, 0, grafik.width, grafik.height)
+        skala = 10
+        ctx.beginPath()
+        ctx.moveTo(titik.X * skala, grafik.height - (titik.Y * skala))
+        titik.forEach(data => {
+            let x = data.X * skala
+            let y = grafik.height - (data.Y * skala)
+            ctx.lineTo(x, y)
+        })
+
+        ctx.stroke()
+    }
+
+</script>
+</html>
